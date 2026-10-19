@@ -6,7 +6,7 @@ export default {
       globalThis.KV = env.KV
     }
     
-    return handleRequest(request)
+    return handleRequest(request, env)
   }
 }
 
@@ -24,9 +24,9 @@ const EXCLUDE_HEADERS = new Set([
 ])
 
 const JSON_SOURCES = {
-  'jin18': 'https://raw.githubusercontent.com/hafrey1/LunaTV-config/refs/heads/main/jin18.json',
-  'jingjian': 'https://raw.githubusercontent.com/hafrey1/LunaTV-config/refs/heads/main/jingjian.json',
-  'full': 'https://raw.githubusercontent.com/hafrey1/LunaTV-config/refs/heads/main/LunaTV-config.json'
+  'jin18': 'https://raw.githubusercontent.com/gunanbei/LunaTV-config/refs/heads/main/jin18.json',
+  'jingjian': 'https://raw.githubusercontent.com/gunanbei/LunaTV-config/refs/heads/main/jingjian.json',
+  'full': 'https://raw.githubusercontent.com/gunanbei/LunaTV-config/refs/heads/main/LunaTV-config.json'
 }
 
 const FORMAT_CONFIG = {
@@ -121,24 +121,48 @@ async function logError(type, info) {
 }
 
 // ---------- 主逻辑 ----------
-async function handleRequest(request) {
+function normalizeBasePath(value) {
+  if (typeof value !== 'string') return null
+
+  const path = value.trim()
+  if (!path) return null
+
+  const normalized = `/${path.replace(/^\/+|\/+$/g, '')}`
+  return normalized === '/' ? null : normalized
+}
+
+async function handleRequest(request, env) {
+  const reqUrl = new URL(request.url)
+  const pathname = reqUrl.pathname
+  const basePath = normalizeBasePath(env?.WORKER_BASE_PATH)
+
+  // 必须配置路径前缀，并且只允许通过该前缀访问 Worker。
+  if (!basePath) {
+    return errorResponse('Worker base path is not configured', {}, 500)
+  }
+
+  const endpointPath = `${basePath}/`
+  const healthPath = `${basePath}/health`
+  if (pathname !== basePath && pathname !== endpointPath && pathname !== healthPath) {
+    return errorResponse('Not Found', {}, 404)
+  }
+
   // 快速处理 OPTIONS 请求
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: CORS_HEADERS })
   }
 
-  const reqUrl = new URL(request.url)
-  const pathname = reqUrl.pathname
   const targetUrlParam = reqUrl.searchParams.get('url')
   const formatParam = reqUrl.searchParams.get('format')
   const prefixParam = reqUrl.searchParams.get('prefix')
   const sourceParam = reqUrl.searchParams.get('source')
 
   const currentOrigin = reqUrl.origin
-  const defaultPrefix = currentOrigin + '/?url='
+  const endpoint = `${currentOrigin}${basePath}`
+  const defaultPrefix = `${endpoint}/?url=`
 
   // 🩺 健康检查（最常见的性能检查，提前处理）
-  if (pathname === '/health') {
+  if (pathname === `${basePath}/health`) {
     return new Response('OK', { status: 200, headers: CORS_HEADERS })
   }
 
@@ -153,7 +177,7 @@ async function handleRequest(request) {
   }
 
   // 返回首页文档
-  return handleHomePage(currentOrigin, defaultPrefix)
+  return handleHomePage(endpoint, defaultPrefix)
 }
 
 // ---------- 代理请求处理子模块 ----------

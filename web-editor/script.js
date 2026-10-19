@@ -5,11 +5,11 @@
 function fixKeyboardEventCompatibility() {
     if (typeof KeyboardEvent !== 'undefined' && KeyboardEvent.prototype) {
         const originalGetModifierState = KeyboardEvent.prototype.getModifierState;
-        
+
         if (!originalGetModifierState || typeof originalGetModifierState !== 'function') {
             KeyboardEvent.prototype.getModifierState = function(keyArg) {
                 console.log(`[兼容性修复] 调用getModifierState(${keyArg})`);
-                
+
                 // 基本的修饰键检测
                 switch (keyArg) {
                     case 'Control':
@@ -31,7 +31,7 @@ function fixKeyboardEventCompatibility() {
                         return false;
                 }
             };
-            
+
             console.log('✅ 键盘事件兼容性补丁已应用');
         }
     }
@@ -50,7 +50,7 @@ let isTokenVisible = false;
 
 // GitHub配置
 const GITHUB_CONFIG = {
-    owner: 'hafrey1',
+    owner: 'gunanbei',
     repo: 'LunaTV-config',
     path: 'LunaTV-config.json',
     branch: 'main'
@@ -86,7 +86,7 @@ class Utils {
             return decodeURIComponent(escape(atob(str)));
         }
     }
-    
+
     static encodeBase64Unicode(str) {
         try {
             const encoder = new TextEncoder();
@@ -97,21 +97,21 @@ class Utils {
             return btoa(unescape(encodeURIComponent(str)));
         }
     }
-    
+
     static translateJsonError(error) {
         let message = error.message;
-        
+
         Object.entries(JSON_ERROR_TRANSLATIONS).forEach(([en, zh]) => {
             message = message.replace(new RegExp(en, 'gi'), zh);
         });
-        
+
         message = message.replace(/at position (\d+)/gi, '在位置 $1');
         message = message.replace(/line (\d+)/gi, '第$1行');
         message = message.replace(/column (\d+)/gi, '第$1列');
-        
+
         return message;
     }
-    
+
     static formatFileSize(bytes) {
         if (bytes === 0) return '0 B';
         const k = 1024;
@@ -119,7 +119,7 @@ class Utils {
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
-    
+
     static getTimestamp() {
         return new Date().toLocaleString('zh-CN', {
             timeZone: 'Asia/Shanghai',
@@ -140,7 +140,7 @@ class MessageManager {
         if (toast) {
             toast.textContent = message;
             toast.className = `message-toast ${type} show`;
-            
+
             setTimeout(() => {
                 toast.classList.remove('show');
             }, duration);
@@ -148,31 +148,31 @@ class MessageManager {
             console.log(`[${type}] ${message}`);
         }
     }
-    
+
     static confirm(message, callback) {
         const modal = document.getElementById('confirm-dialog');
         if (modal) {
             const messageEl = document.getElementById('confirm-message');
             const yesBtn = document.getElementById('confirm-yes');
             const noBtn = document.getElementById('confirm-no');
-            
+
             messageEl.textContent = message;
             modal.classList.add('show');
-            
+
             const handleYes = () => {
                 modal.classList.remove('show');
                 yesBtn.removeEventListener('click', handleYes);
                 noBtn.removeEventListener('click', handleNo);
                 callback(true);
             };
-            
+
             const handleNo = () => {
                 modal.classList.remove('show');
                 yesBtn.removeEventListener('click', handleYes);
                 noBtn.removeEventListener('click', handleNo);
                 callback(false);
             };
-            
+
             yesBtn.addEventListener('click', handleYes);
             noBtn.addEventListener('click', handleNo);
         } else {
@@ -185,19 +185,19 @@ class MessageManager {
 class TokenManager {
     static init() {
         const tokenInput = document.getElementById('github-token');
-        
+
         if (tokenInput) {
             // 监听Token输入
             tokenInput.addEventListener('input', (e) => {
                 githubToken = e.target.value.trim();
                 updateSaveButton();
-                
+
                 // 简单的保存提示，不触发事件循环
                 if (githubToken && githubToken.length > 20) {
                     this.showTokenSaveHint();
                 }
             });
-            
+
             // 监听浏览器自动填充
             tokenInput.addEventListener('change', () => {
                 setTimeout(() => {
@@ -210,14 +210,14 @@ class TokenManager {
                     }
                 }, 100);
             });
-            
+
             // 页面加载后尝试恢复Token
             setTimeout(() => {
                 this.restoreFromBrowser();
             }, 1000);
         }
     }
-    
+
     // 修复：简化密码保存提示，避免递归
     static showTokenSaveHint() {
         // 静默提示，避免频繁显示
@@ -226,21 +226,21 @@ class TokenManager {
             this.hintShown = true;
         }
     }
-    
+
     // 切换Token显示/隐藏
     static toggleTokenVisibility() {
         const tokenInput = document.getElementById('github-token');
         const toggleBtn = document.getElementById('toggle-token-btn');
-        
+
         if (tokenInput && toggleBtn) {
             isTokenVisible = !isTokenVisible;
-            
+
             tokenInput.type = isTokenVisible ? 'text' : 'password';
             toggleBtn.textContent = isTokenVisible ? '🙈 隐藏' : '👁️ 显示';
             toggleBtn.title = isTokenVisible ? '隐藏Token' : '显示Token';
         }
     }
-    
+
     static clearToken() {
         const tokenInput = document.getElementById('github-token');
         if (tokenInput) {
@@ -250,7 +250,7 @@ class TokenManager {
         updateSaveButton();
         MessageManager.show('Token已清除', 'info');
     }
-    
+
     // 从浏览器密码管理器恢复Token
     static restoreFromBrowser() {
         const tokenInput = document.getElementById('github-token');
@@ -282,24 +282,24 @@ class StatusManager {
             }
         });
     }
-    
+
     static updateFileInfo(info) {
         if (info.size !== undefined) {
             const sizeEl = document.getElementById('file-size');
             if (sizeEl) sizeEl.textContent = Utils.formatFileSize(info.size);
         }
-        
+
         if (info.lastSaved) {
             const savedEl = document.getElementById('last-saved');
             if (savedEl) savedEl.textContent = `最后保存: ${info.lastSaved}`;
         }
-        
+
         if (info.lastModified) {
             const statusEl = document.getElementById('file-status');
             if (statusEl) statusEl.textContent = `SHA: ${info.lastModified.substring(0, 7)}`;
         }
     }
-    
+
     static updateValidationStatus(isValid, message = '') {
         const statusEl = document.getElementById('validation-status');
         if (statusEl) {
@@ -312,20 +312,20 @@ class StatusManager {
             }
         }
     }
-    
+
     static updateStats() {
         if (!editorLoaded || !editor) return;
-        
+
         const content = editor.getValue();
         const lines = content.split('\n').length;
         const chars = content.length;
-        
+
         const charEl = document.getElementById('character-count');
         const lineEl = document.getElementById('line-count');
-        
+
         if (charEl) charEl.textContent = `字符: ${chars}`;
         if (lineEl) lineEl.textContent = `行数: ${lines}`;
-        
+
         const blob = new Blob([content]);
         StatusManager.updateFileInfo({ size: blob.size });
     }
@@ -338,19 +338,19 @@ class GitHubAPI {
             MessageManager.show('请先输入GitHub Token', 'error');
             return false;
         }
-        
+
         if (!editorLoaded) {
             MessageManager.show('编辑器尚未加载完成，请稍后再试', 'warning');
             return false;
         }
-        
+
         try {
             StatusManager.setLoading(true);
             MessageManager.show('正在从GitHub加载配置...', 'info');
-            
+
             // 🛠️ 使用真实的GitHub API URL
             const url = `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`;
-            
+
             const response = await fetch(url, {
                 headers: {
                     'Authorization': `token ${githubToken}`,
@@ -358,34 +358,34 @@ class GitHubAPI {
                     'User-Agent': 'Luna-TV-Config-Editor/1.0'
                 }
             });
-            
+
             if (!response.ok) {
                 throw new Error(this.getErrorMessage(response.status));
             }
-            
+
             const data = await response.json();
             currentSha = data.sha;
-            
+
             const content = Utils.decodeBase64Unicode(data.content);
-            
+
             try {
                 JSON.parse(content);
                 currentConfig = content;
-                
+
                 if (editor && editor.setValue) {
                     editor.setValue(content);
-                    
+
                     setTimeout(() => {
                         if (editor.getAction) {
                             editor.getAction('editor.action.formatDocument').run();
                         }
                     }, 100);
                 }
-                
+
                 StatusManager.updateFileInfo({ size: data.size, lastModified: data.sha });
                 MessageManager.show('✅ 配置文件加载成功！', 'success');
                 return true;
-                
+
             } catch (jsonError) {
                 const translatedError = Utils.translateJsonError(jsonError);
                 MessageManager.show(`JSON格式错误: ${translatedError}`, 'error');
@@ -394,7 +394,7 @@ class GitHubAPI {
                 }
                 return false;
             }
-            
+
         } catch (error) {
             MessageManager.show(`❌ 加载失败: ${error.message}`, 'error');
             return false;
@@ -402,20 +402,20 @@ class GitHubAPI {
             StatusManager.setLoading(false);
         }
     }
-    
+
     static async saveConfig() {
         if (!githubToken) {
             MessageManager.show('请先加载配置文件', 'error');
             return false;
         }
-        
+
         if (!editorLoaded || !editor) {
             MessageManager.show('编辑器尚未加载完成', 'error');
             return false;
         }
-        
+
         const content = editor.getValue();
-        
+
         try {
             JSON.parse(content);
         } catch (error) {
@@ -423,20 +423,20 @@ class GitHubAPI {
             MessageManager.show(`❌ 保存失败：${translatedError}`, 'error');
             return false;
         }
-        
+
         if (content === currentConfig) {
             MessageManager.show('文件未发生变化，无需保存', 'info');
             return false;
         }
-        
+
         try {
             StatusManager.setLoading(true);
             MessageManager.show('正在保存到GitHub...', 'info');
-            
+
             // 🛠️ 使用真实的GitHub API URL
             const url = `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`;
             const encodedContent = Utils.encodeBase64Unicode(content);
-            
+
             const response = await fetch(url, {
                 method: 'PUT',
                 headers: {
@@ -452,24 +452,24 @@ class GitHubAPI {
                     branch: GITHUB_CONFIG.branch
                 })
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(`保存失败 (${response.status}): ${errorData.message || response.statusText}`);
             }
-            
+
             const savedData = await response.json();
             currentSha = savedData.content.sha;
             currentConfig = content;
-            
+
             StatusManager.updateFileInfo({
                 size: new Blob([content]).size,
                 lastSaved: Utils.getTimestamp()
             });
-            
+
             MessageManager.show('✅ 配置文件保存成功！', 'success');
             return true;
-            
+
         } catch (error) {
             MessageManager.show(`❌ 保存失败: ${error.message}`, 'error');
             return false;
@@ -477,7 +477,7 @@ class GitHubAPI {
             StatusManager.setLoading(false);
         }
     }
-    
+
     static getErrorMessage(status) {
         const messages = {
             401: 'Token验证失败，请检查Token权限是否包含repo访问权限',
@@ -486,7 +486,7 @@ class GitHubAPI {
             422: '请求参数无效',
             500: 'GitHub服务器错误'
         };
-        
+
         return messages[status] || `请求失败 (${status})`;
     }
 }
@@ -498,7 +498,7 @@ class JSONOperations {
             MessageManager.show('编辑器尚未加载完成', 'error');
             return;
         }
-        
+
         try {
             const content = editor.getValue();
             const parsed = JSON.parse(content);
@@ -510,13 +510,13 @@ class JSONOperations {
             MessageManager.show(`❌ 格式化失败: ${translatedError}`, 'error');
         }
     }
-    
+
     static minify() {
         if (!editorLoaded || !editor) {
             MessageManager.show('编辑器尚未加载完成', 'error');
             return;
         }
-        
+
         try {
             const content = editor.getValue();
             const parsed = JSON.parse(content);
@@ -528,13 +528,13 @@ class JSONOperations {
             MessageManager.show(`❌ 压缩失败: ${translatedError}`, 'error');
         }
     }
-    
+
     static validate() {
         if (!editorLoaded || !editor) {
             MessageManager.show('编辑器尚未加载完成', 'error');
             return false;
         }
-        
+
         try {
             const content = editor.getValue();
             JSON.parse(content);
@@ -548,13 +548,13 @@ class JSONOperations {
             return false;
         }
     }
-    
+
     static clear() {
         if (!editorLoaded || !editor) {
             MessageManager.show('编辑器尚未加载完成', 'error');
             return;
         }
-        
+
         MessageManager.confirm('确认清空编辑器内容吗？', (confirmed) => {
             if (confirmed) {
                 editor.setValue('{}');
@@ -570,16 +570,16 @@ class FileOperations {
         const input = document.getElementById('file-input');
         input.click();
     }
-    
+
     static handleFileUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
-        
+
         if (!file.name.endsWith('.json')) {
             MessageManager.show('请选择JSON文件', 'error');
             return;
         }
-        
+
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
@@ -592,31 +592,31 @@ class FileOperations {
                 MessageManager.show(`❌ 文件格式错误: ${translatedError}`, 'error');
             }
         };
-        
+
         reader.readAsText(file);
         event.target.value = '';
     }
-    
+
     static download() {
         if (!editorLoaded || !editor) {
             MessageManager.show('编辑器尚未加载完成', 'error');
             return;
         }
-        
+
         try {
             const content = editor.getValue();
             JSON.parse(content);
-            
+
             const blob = new Blob([content], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
-            
+
             const a = document.createElement('a');
             a.href = url;
             a.download = `luna-tv-config-${Date.now()}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            
+
             URL.revokeObjectURL(url);
             MessageManager.show('✅ 文件下载成功', 'success');
         } catch (error) {
@@ -634,16 +634,16 @@ class EditorControls {
             MessageManager.show('编辑器尚未加载完成', 'error');
             return;
         }
-        
+
         const appContainer = document.querySelector('.app-container');
         const fullscreenBtn = document.getElementById('fullscreen-btn');
-        
+
         if (!document.fullscreenElement) {
             appContainer.requestFullscreen().then(() => {
                 fullscreenBtn.textContent = '🔍 退出全屏';
                 fullscreenBtn.title = '退出全屏模式';
                 MessageManager.show('已进入全屏模式，按ESC键退出', 'success');
-                
+
                 setTimeout(() => {
                     if (editor) {
                         editor.layout();
@@ -657,7 +657,7 @@ class EditorControls {
                 fullscreenBtn.textContent = '🔍 全屏';
                 fullscreenBtn.title = '全屏模式';
                 MessageManager.show('已退出全屏模式', 'info');
-                
+
                 setTimeout(() => {
                     if (editor) {
                         editor.layout();
@@ -666,17 +666,17 @@ class EditorControls {
             });
         }
     }
-    
+
     // 复制功能
     static copyContent() {
         if (!editorLoaded || !editor) {
             MessageManager.show('编辑器尚未加载完成', 'error');
             return;
         }
-        
+
         try {
             const content = editor.getValue();
-            
+
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(content).then(() => {
                     MessageManager.show('✅ 内容已复制到剪贴板', 'success');
@@ -690,7 +690,7 @@ class EditorControls {
             MessageManager.show(`❌ 复制失败: ${error.message}`, 'error');
         }
     }
-    
+
     // 降级复制方法
     static fallbackCopy(content) {
         try {
@@ -699,14 +699,14 @@ class EditorControls {
             textArea.style.position = 'fixed';
             textArea.style.top = '-9999px';
             textArea.style.left = '-9999px';
-            
+
             document.body.appendChild(textArea);
             textArea.focus();
             textArea.select();
-            
+
             const successful = document.execCommand('copy');
             document.body.removeChild(textArea);
-            
+
             if (successful) {
                 MessageManager.show('✅ 内容已复制到剪贴板', 'success');
             } else {
@@ -716,14 +716,14 @@ class EditorControls {
             MessageManager.show('❌ 复制失败，请手动复制内容', 'error');
         }
     }
-    
+
     // 查找功能
     static openSearch() {
         if (!editorLoaded || !editor) {
             MessageManager.show('编辑器尚未加载完成', 'error');
             return;
         }
-        
+
         try {
             if (editor.getAction) {
                 const searchAction = editor.getAction('actions.find');
@@ -745,23 +745,23 @@ class EditorControls {
 // 🛠️ 修复后的Monaco编辑器初始化
 function initializeEditor() {
     console.log('🛠️ 开始初始化Monaco编辑器（完整修复版）');
-    
+
     // 再次确保兼容性修复已应用
     fixKeyboardEventCompatibility();
-    
+
     if (typeof monaco !== 'undefined') {
         createEditor();
         return;
     }
-    
+
     // 🛠️ 使用真实的Monaco编辑器CDN地址
     if (typeof require !== 'undefined') {
-        require.config({ 
-            paths: { 
-                'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.34.1/min/vs' 
+        require.config({
+            paths: {
+                'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.34.1/min/vs'
             }
         });
-        
+
         require(['vs/editor/editor.main'], function () {
             console.log('✅ Monaco编辑器模块加载成功');
             createEditor();
@@ -777,13 +777,13 @@ function createEditor() {
         MessageManager.show('❌ 编辑器容器未找到', 'error');
         return;
     }
-    
+
     try {
         console.log('🛠️ 创建Monaco编辑器实例...');
-        
+
         // 最后一次确保兼容性修复
         fixKeyboardEventCompatibility();
-        
+
         editor = monaco.editor.create(editorContainer, {
             value: `{
   "message": "欢迎使用Luna TV配置编辑器 - 完整修复版",
@@ -832,9 +832,9 @@ function createEditor() {
             suggest: { showKeywords: false },
             hover: { enabled: false }
         });
-        
+
         console.log('✅ Monaco编辑器实例创建成功');
-        
+
         // 监听内容变化
         editor.onDidChangeModelContent(() => {
             if (editorLoaded) {
@@ -843,7 +843,7 @@ function createEditor() {
                 updateSaveButton();
             }
         });
-        
+
         // 监听光标位置变化
         editor.onDidChangeCursorPosition((e) => {
             const positionEl = document.getElementById('cursor-position');
@@ -851,10 +851,10 @@ function createEditor() {
                 positionEl.textContent = `行: ${e.position.lineNumber}, 列: ${e.position.column}`;
             }
         });
-        
+
         editorLoaded = true;
         MessageManager.show('🛠️ 编辑器初始化完成，所有问题已修复！', 'success');
-        
+
     } catch (error) {
         MessageManager.show(`❌ 编辑器创建失败: ${error.message}`, 'error');
         console.error('编辑器创建失败:', error);
@@ -867,7 +867,7 @@ function updateSaveButton() {
         if (saveBtn) saveBtn.disabled = true;
         return;
     }
-    
+
     const hasChanges = editor.getValue() !== currentConfig;
     saveBtn.disabled = !hasChanges;
     saveBtn.textContent = hasChanges ? '💾 保存配置 *' : '💾 保存配置';
@@ -878,18 +878,18 @@ function switchTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
     });
-    
+
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('active');
     });
-    
+
     document.getElementById(`${tabName}-tab`).classList.add('active');
     document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-    
+
     // 🌳 显示/隐藏树状视图控制按钮
     const expandBtn = document.getElementById('expand-all-btn');
     const collapseBtn = document.getElementById('collapse-all-btn');
-    
+
     if (expandBtn && collapseBtn) {
         if (tabName === 'tree') {
             expandBtn.style.display = 'block';
@@ -899,15 +899,15 @@ function switchTab(tabName) {
             collapseBtn.style.display = 'none';
         }
     }
-    
+
     if (tabName === 'editor' && editor) {
         setTimeout(() => editor.layout(), 100);
     }
-    
+
     if (tabName === 'tree') {
         updateTreeView();
     }
-    
+
     if (tabName === 'preview') {
         updatePreview();
     }
@@ -917,15 +917,15 @@ function switchTab(tabName) {
 function updateTreeView() {
     const treeContainer = document.getElementById('json-tree');
     if (!treeContainer || !editor) return;
-    
+
     try {
         const content = editor.getValue();
         const parsed = JSON.parse(content);
         treeContainer.innerHTML = '';
-        
+
         const treeElement = createTreeView(parsed, 'root');
         treeContainer.appendChild(treeElement);
-        
+
     } catch (error) {
         treeContainer.innerHTML = '<div class="error-message">JSON格式错误，无法生成树状视图</div>';
     }
@@ -936,7 +936,7 @@ function createTreeView(data, key = '', level = 0) {
     const container = document.createElement('div');
     container.className = 'tree-node';
     container.style.marginLeft = `${level * 20}px`;
-    
+
     if (Array.isArray(data)) {
         // 处理数组
         const header = document.createElement('div');
@@ -946,19 +946,19 @@ function createTreeView(data, key = '', level = 0) {
             <span class="tree-key">${key}</span>
             <span class="tree-type">[Array(${data.length})]</span>
         `;
-        
+
         const content = document.createElement('div');
         content.className = 'tree-content';
-        
+
         data.forEach((item, index) => {
             const child = createTreeView(item, `[${index}]`, level + 1);
             content.appendChild(child);
         });
-        
+
         header.addEventListener('click', () => toggleTreeNode(header, content));
         container.appendChild(header);
         container.appendChild(content);
-        
+
     } else if (data !== null && typeof data === 'object') {
         // 处理对象
         const keys = Object.keys(data);
@@ -969,27 +969,27 @@ function createTreeView(data, key = '', level = 0) {
             <span class="tree-key">${key}</span>
             <span class="tree-type">{Object(${keys.length})}</span>
         `;
-        
+
         const content = document.createElement('div');
         content.className = 'tree-content';
-        
+
         keys.forEach(objKey => {
             const child = createTreeView(data[objKey], objKey, level + 1);
             content.appendChild(child);
         });
-        
+
         header.addEventListener('click', () => toggleTreeNode(header, content));
         container.appendChild(header);
         container.appendChild(content);
-        
+
     } else {
         // 处理基本类型值
         const leaf = document.createElement('div');
         leaf.className = 'tree-leaf';
-        
+
         let valueClass = 'tree-value';
         let displayValue = String(data);
-        
+
         if (data === null) {
             valueClass += ' null-value';
             displayValue = 'null';
@@ -1001,15 +1001,15 @@ function createTreeView(data, key = '', level = 0) {
         } else if (typeof data === 'boolean') {
             valueClass += ' boolean-value';
         }
-        
+
         leaf.innerHTML = `
             <span class="tree-key">${key}:</span>
             <span class="${valueClass}">${displayValue}</span>
         `;
-        
+
         container.appendChild(leaf);
     }
-    
+
     return container;
 }
 
@@ -1017,7 +1017,7 @@ function createTreeView(data, key = '', level = 0) {
 function toggleTreeNode(header, content) {
     const toggle = header.querySelector('.tree-toggle');
     const isExpanded = content.style.display !== 'none';
-    
+
     if (isExpanded) {
         content.style.display = 'none';
         toggle.textContent = '▶';
@@ -1035,7 +1035,7 @@ function expandAllTreeNodes() {
     if (treeContainer) {
         const headers = treeContainer.querySelectorAll('.tree-header');
         const contents = treeContainer.querySelectorAll('.tree-content');
-        
+
         headers.forEach(header => {
             const toggle = header.querySelector('.tree-toggle');
             if (toggle) {
@@ -1043,11 +1043,11 @@ function expandAllTreeNodes() {
                 header.classList.remove('collapsed');
             }
         });
-        
+
         contents.forEach(content => {
             content.style.display = 'block';
         });
-        
+
         MessageManager.show('✅ 所有节点已展开', 'info');
     }
 }
@@ -1058,7 +1058,7 @@ function collapseAllTreeNodes() {
     if (treeContainer) {
         const headers = treeContainer.querySelectorAll('.tree-header');
         const contents = treeContainer.querySelectorAll('.tree-content');
-        
+
         headers.forEach(header => {
             const toggle = header.querySelector('.tree-toggle');
             if (toggle) {
@@ -1066,11 +1066,11 @@ function collapseAllTreeNodes() {
                 header.classList.add('collapsed');
             }
         });
-        
+
         contents.forEach(content => {
             content.style.display = 'none';
         });
-        
+
         MessageManager.show('✅ 所有节点已收起', 'info');
     }
 }
@@ -1079,7 +1079,7 @@ function collapseAllTreeNodes() {
 function updatePreview() {
     const previewContent = document.getElementById('json-preview-content');
     if (!previewContent || !editor) return;
-    
+
     try {
         const content = editor.getValue();
         const parsed = JSON.parse(content);
@@ -1104,54 +1104,54 @@ function setupEventListeners() {
         { id: 'validate-btn', handler: JSONOperations.validate },
         { id: 'clear-btn', handler: JSONOperations.clear }
     ];
-    
+
     buttons.forEach(({ id, handler }) => {
         const btn = document.getElementById(id);
         if (btn) {
             btn.addEventListener('click', handler);
         }
     });
-    
+
     // 编辑器控制按钮
     const fullscreenBtn = document.getElementById('fullscreen-btn');
     if (fullscreenBtn) {
         fullscreenBtn.addEventListener('click', EditorControls.toggleFullscreen);
     }
-    
+
     const copyBtn = document.getElementById('copy-btn');
     if (copyBtn) {
         copyBtn.addEventListener('click', EditorControls.copyContent);
     }
-    
+
     const searchBtn = document.getElementById('search-btn');
     if (searchBtn) {
         searchBtn.addEventListener('click', EditorControls.openSearch);
     }
-    
+
     // 🌳 树状视图控制按钮
     const expandAllBtn = document.getElementById('expand-all-btn');
     if (expandAllBtn) {
         expandAllBtn.addEventListener('click', expandAllTreeNodes);
     }
-    
+
     const collapseAllBtn = document.getElementById('collapse-all-btn');
     if (collapseAllBtn) {
         collapseAllBtn.addEventListener('click', collapseAllTreeNodes);
     }
-    
+
     // 文件上传
     const fileInput = document.getElementById('file-input');
     if (fileInput) {
         fileInput.addEventListener('change', FileOperations.handleFileUpload);
     }
-    
+
     // 标签页切换
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             switchTab(btn.dataset.tab);
         });
     });
-    
+
     // 编辑器选项
     const wordWrapToggle = document.getElementById('word-wrap-toggle');
     if (wordWrapToggle) {
@@ -1161,7 +1161,7 @@ function setupEventListeners() {
             }
         });
     }
-    
+
     const minimapToggle = document.getElementById('minimap-toggle');
     if (minimapToggle) {
         minimapToggle.addEventListener('change', (e) => {
@@ -1170,7 +1170,7 @@ function setupEventListeners() {
             }
         });
     }
-    
+
     const lineNumbersToggle = document.getElementById('line-numbers-toggle');
     if (lineNumbersToggle) {
         lineNumbersToggle.addEventListener('change', (e) => {
@@ -1179,7 +1179,7 @@ function setupEventListeners() {
             }
         });
     }
-    
+
     const themeSelect = document.getElementById('theme-select');
     if (themeSelect) {
         themeSelect.addEventListener('change', (e) => {
@@ -1188,7 +1188,7 @@ function setupEventListeners() {
             }
         });
     }
-    
+
     const fontSizeSlider = document.getElementById('font-size-slider');
     if (fontSizeSlider) {
         fontSizeSlider.addEventListener('input', (e) => {
@@ -1202,7 +1202,7 @@ function setupEventListeners() {
             }
         });
     }
-    
+
     // 全屏状态监听
     document.addEventListener('fullscreenchange', () => {
         const fullscreenBtn = document.getElementById('fullscreen-btn');
@@ -1216,7 +1216,7 @@ function setupEventListeners() {
             }
         }
     });
-    
+
     // 键盘快捷键
     document.addEventListener('keydown', (e) => {
         if (e.ctrlKey) {
@@ -1255,7 +1255,7 @@ function setupEventListeners() {
                     break;
             }
         }
-        
+
         // ESC键退出全屏
         if (e.key === 'Escape' && document.fullscreenElement) {
             document.exitFullscreen();
@@ -1266,19 +1266,19 @@ function setupEventListeners() {
 // 应用初始化
 function initializeApp() {
     console.log('🛠️ Luna TV配置编辑器启动中（完整修复版）...');
-    
+
     // 确保键盘事件兼容性修复已应用
     fixKeyboardEventCompatibility();
-    
+
     // 初始化Token管理（修复递归版本）
     TokenManager.init();
-    
+
     // 初始化编辑器
     initializeEditor();
-    
+
     // 设置事件监听器
     setupEventListeners();
-    
+
     // 显示欢迎消息
     setTimeout(() => {
         MessageManager.show('🛠️ Luna TV配置编辑器已启动，所有问题已完全修复！', 'success');

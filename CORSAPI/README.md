@@ -17,7 +17,7 @@
 **示例：**
 
 ```
-https://<你的域名>/?url=https://ikunzyapi.com/api.php/provide/vod/
+https://<你的域名>/api-v1/?url=https://ikunzyapi.com/api.php/provide/vod/
 ```
 
 ### 2. 多配置源支持
@@ -41,10 +41,10 @@ https://<你的域名>/?url=https://ikunzyapi.com/api.php/provide/vod/
 
 ```jsx
 // 获取带代理前缀的 JSON
-https://<你的域名>/?format=1&source=jin18
+https://<你的域名>/api-v1/?format=1&source=jin18
 
 // 获取代理 Base58 编码订阅
-https://<你的域名>/?format=3&source=full
+https://<你的域名>/api-v1/?format=3&source=full
 ```
 
 ### 5. 动态示例生成
@@ -62,6 +62,24 @@ HTML 页面会根据当前域名自动生成示例链接，无需手动修改
 5. 在 Cloudflare Workers KV 中创建命名空间：名称：CONFIG_KV,绑定变量名：CONFIG_KV
 6. 绑定自定义域名（可选）
 
+### 配置访问根路径（推荐）
+
+为了避免 Worker 域名根路径被直接访问，建议在 Cloudflare Worker 的 **Settings → Variables and Secrets** 中添加一个文本环境变量：
+
+- 变量名：`WORKER_BASE_PATH`
+- 变量值：例如 `/api-v1`（填写 `api-v1` 也可以，Worker 会自动补充 `/`）
+
+配置后，接口统一通过该路径访问：
+
+```text
+https://<你的域名>/api-v1/?format=3&source=full
+https://<你的域名>/api-v1/?url=https://example.com/api
+https://<你的域名>/api-v1/health
+```
+
+此时直接访问 `https://<你的域名>/` 会返回 `404 Not Found`。如果没有配置 `WORKER_BASE_PATH`，Worker 会返回 `500`，避免在未设置保护路径时意外暴露服务。
+
+
 ---
 
 ## 🔗 使用示例
@@ -71,37 +89,37 @@ HTML 页面会根据当前域名自动生成示例链接，无需手动修改
 ### 示例 1：代理任意 API
 
 ```
-https://api.example.workers.dev/?url=https://ikunzyapi.com/api.php/provide/vod/
+https://api.example.workers.dev/api-v1/?url=https://ikunzyapi.com/api.php/provide/vod/
 ```
 
 ### 示例 2：获取原始 JSON 配置（精简版）
 
 ```jsx
-https://api.example.workers.dev/?format=0&source=jin18
+https://api.example.workers.dev/api-v1/?format=0&source=jin18
 ```
 
 ### 示例 3：获取带代理前缀的 JSON 配置（完整版）
 
 ```jsx
-https://api.example.workers.dev/?format=1&source=full
+https://api.example.workers.dev/api-v1/?format=1&source=full
 ```
 
 ### 示例 4：获取原始 Base58 编码（精简+成人版）
 
 ```jsx
-https://api.example.workers.dev/?format=2&source=jingjian
+https://api.example.workers.dev/api-v1/?format=2&source=jingjian
 ```
 
 ### 示例 5：获取代理 Base58 编码订阅（完整版）
 
 ```jsx
-https://api.example.workers.dev/?format=3&source=full
+https://api.example.workers.dev/api-v1/?format=3&source=full
 ```
 
 ### 示例 6：自定义代理前缀
 
 ```jsx
-https://api.example.workers.dev/?format=1&source=full&prefix=https://my-proxy.com/?url=
+https://api.example.workers.dev/api-v1/?format=1&source=full&prefix=https://my-proxy.com/?url=
 ```
 
 ---
@@ -136,48 +154,48 @@ https://api.example.workers.dev/?format=1&source=full&prefix=https://my-proxy.co
 
 ```jsx
 # 原始 JSON
-https://<你的域名>/?format=0&source=jin18
+https://<你的域名>/api-v1/?format=0&source=jin18
 
 # 带代理前缀的 JSON
-https://<你的域名>/?format=1&source=jin18
+https://<你的域名>/api-v1/?format=1&source=jin18
 
 # 原始 Base58 编码
-https://<你的域名>/?format=2&source=jin18
+https://<你的域名>/api-v1/?format=2&source=jin18
 
 # 代理 Base58 编码（推荐用于订阅）
-https://<你的域名>/?format=3&source=jin18
+https://<你的域名>/api-v1/?format=3&source=jin18
 ```
 
 ### 精简+成人版（jingjian）
 
 ```jsx
 # 原始 JSON
-https://<你的域名>/?format=0&source=jingjian
+https://<你的域名>/api-v1/?format=0&source=jingjian
 
 # 带代理前缀的 JSON
-https://<你的域名>/?format=1&source=jingjian
+https://<你的域名>/api-v1/?format=1&source=jingjian
 
 # 原始 Base58 编码
-https://<你的域名>/?format=2&source=jingjian
+https://<你的域名>/api-v1/?format=2&source=jingjian
 
 # 代理 Base58 编码（推荐用于订阅）
-https://<你的域名>/?format=3&source=jingjian
+https://<你的域名>/api-v1/?format=3&source=jingjian
 ```
 
 ### 完整版（full，默认）
 
 ```jsx
 # 原始 JSON
-https://<你的域名>/?format=0&source=full
+https://<你的域名>/api-v1/?format=0&source=full
 
 # 带代理前缀的 JSON
-https://<你的域名>/?format=1&source=full
+https://<你的域名>/api-v1/?format=1&source=full
 
 # 原始 Base58 编码
-https://<你的域名>/?format=2&source=full
+https://<你的域名>/api-v1/?format=2&source=full
 
 # 代理 Base58 编码（推荐用于订阅）
-https://<你的域名>/?format=3&source=full
+https://<你的域名>/api-v1/?format=3&source=full
 ```
 
 ---
